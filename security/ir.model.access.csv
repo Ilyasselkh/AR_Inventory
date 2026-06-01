@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+AR_Inventory.access_araymond_inventory,access_araymond_inventory,AR_Inventory.model_araymond_inventory,base.group_user,1,1,1,1
+AR_Inventory.access_araymond_etiquette,access_araymond_etiquette,AR_Inventory.model_araymond_etiquette,base.group_user,1,1,1,1
+AR_Inventory.access_araymond_invsession,access_araymond_invsession,AR_Inventory.model_araymond_invsession,base.group_user,1,1,1,1
+AR_Inventory.access_araymond_ref,access_araymond_ref,AR_Inventory.model_araymond_ref,base.group_user,1,1,1,1
+AR_Inventory.access_araymond_lxo3,access_araymond_lxo3,AR_Inventory.model_araymond_lxo3,base.group_user,1,1,1,1
+AR_Inventory.access_araymond_maininvsession,access_araymond_maininvsession,AR_Inventory.model_araymond_maininvsession,base.group_user,1,1,1,1
+
+
