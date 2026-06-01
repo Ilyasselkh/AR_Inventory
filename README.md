@@ -1,109 +1,85 @@
 # AR_Inventory
 
+Module Odoo d inventaire par scan. Il gere les sessions, emplacements, etiquettes, lots, quantites et comparaisons avec les donnees SAP/LX03.
 
-> Documentation du module d?inventaire par scan et comparaison SAP/LX03.
+## Objectif
 
+Cette documentation explique le perimetre fonctionnel du module, les roles utilisateurs, le workflow, la configuration et les principaux objets techniques.
 
-## Vue d?ensemble
+## Utilisateurs concernes
 
-AR_Inventory est un outil op?rationnel d?inventaire. Il g?re des sessions de scan, des emplacements, des ?tiquettes, des lots, des quantit?s et des comparaisons avec les donn?es SAP/LX03. Il permet plusieurs passages de scan et met en ?vidence les ?carts entre SAP et le terrain.
+- Operateur inventaire
+- Responsable logistique
+- Controleur inventaire
+- Administrateur Odoo
 
-## Utilisateurs concern?s
+## Workflow metier
 
-- Op?rateur inventaire : scanne les ?tiquettes et emplacements.
-- Responsable logistique : lance et ferme les sessions.
-- Administrateur : charge les fichiers et contr?le les anomalies.
-- Contr?leur : analyse les ?carts SAP vs scans.
-
-## Workflow m?tier
-
-1. Cr?ation session principale
-2. Chargement ?ventuel fichier LX03/SAP
-3. Cr?ation des sessions ou emplacements
-4. Scan RayPro/r?ception/logistique/manuelle
-5. Contr?le des anomalies
+1. Creation session principale
+2. Chargement donnees SAP ou LX03
+3. Creation sessions ou emplacements
+4. Scan RayPro, reception, logistique ou manuel
+5. Controle anomalies
 6. Comparaison des passages
 7. Fermeture inventaire
 
-## Fonctionnement op?rationnel
+## Fonctionnement operationnel
 
-- Cr?er une session d?inventaire.
-- Charger ou pr?parer les donn?es de r?f?rence.
-- Scanner les ?tiquettes selon le mode choisi.
-- Utiliser les vues d??cart pour corriger ou analyser.
-- Fermer la session une fois les scans valid?s.
+- Creer une session.
+- Charger les donnees de reference.
+- Scanner etiquettes et emplacements.
+- Analyser les ecarts.
+- Fermer la session validee.
 
-## Configuration recommand?e
+## Configuration recommandee
 
-- Installer la d?pendance Python openpyxl.
-- Pr?parer les fichiers source SAP/LX03 au format attendu.
-- Configurer les acc?s aux menus inventaire.
-- D?finir les r?gles internes de scan et fermeture.
+- Installer la dependance Python openpyxl.
+- Preparer les fichiers source SAP/LX03.
+- Configurer les droits inventaire.
+- Definir les regles internes de scan.
 
-## D?pendances Odoo
+## Dependances Odoo
 
 - `base`
 
-## Mod?les techniques
+## Modeles principaux
 
-- `araymond.inventory` : Araymond inventory (`models/AR_inventory.py`)
-- `araymond.maininvsession` (`models/AR_inventory.py`)
-- `araymond.etiquette` : Araymond inventory (`models/AR_inventory.py`)
-- `araymond.invsession` : Araymond inventory (`models/AR_inventory.py`)
-- `araymond.lxo3` : LX03 Inventory Data (`models/AR_inventory.py`)
-- `araymond.ref` : Araymond inventory reference (`models/AR_inventory.py`)
-- `araymond.imagestock` : Araymond inventory Image de stock (`models/AR_inventory.py`)
+- `araymond.inventory`
+- `araymond.etiquette`
+- `araymond.maininvsession`
+- `araymond.invsession`
+- `araymond.lxo3`
+- `araymond.ref`
+- `araymond.imagestock`
 
-## ?tats d?tect?s dans le code
-
-- `models/AR_inventory.py` : `CreationMain` (CreationMain), `Creation` (Creation), `Scan` (Scan), `Fermeture` (Fermeture)
-- `models/AR_inventory.py` : `Creation` (Creation), `Scan` (Scan), `Fermeture` (Fermeture)
-
-## Actions serveur principales
-
-- `action_view_form_inv` (`models/AR_inventory.py`)
-- `action_raypro` (`models/AR_inventory.py`)
-- `action_receptionSAP` (`models/AR_inventory.py`)
-- `action_logistique` (`models/AR_inventory.py`)
-- `action_Manuel` (`models/AR_inventory.py`)
-- `action_show_su_lxo3` (`models/AR_inventory.py`)
-- `action_close` (`models/AR_inventory.py`)
-- `action_show_ecarts_sapvs1scan` (`models/AR_inventory.py`)
-- `action_show_ecarts_1vs2scan` (`models/AR_inventory.py`)
-- `action_show_ecarts_2vs3scan` (`models/AR_inventory.py`)
-- `action_manuel_save` (`models/AR_inventory.py`)
-- `action_mod_empl` (`models/AR_inventory.py`)
-- `action_scan_ok` (`models/AR_inventory.py`)
-- `action_load_file` (`models/AR_inventory.py`)
-- `action_creation` (`models/AR_inventory.py`)
-- `action_creation` (`models/AR_inventory.py`)
-- `action_create_empl` (`models/AR_inventory.py`)
-- `action_mod_empl` (`models/AR_inventory.py`)
-- `action_close_invsession` (`models/AR_inventory.py`)
-
-## Fichiers charg?s par le manifest
+## Structure importante du module
 
 - `security/ir.model.access.csv`
-- `views/menu.xml`
 - `views/inventory.xml`
+- `views/menu.xml`
+- `models/__init__.py`
+- `models/AR_inventory.py`
 
-## S?curit? et droits
+## Securite
 
-Le module s?appuie sur les fichiers suivants pour d?finir les groupes, r?gles d?enregistrement et droits d?acc?s :
+Les droits sont geres par les fichiers du dossier `security`. Il faut verifier les groupes, les regles enregistrement et les acces CSV apres installation ou modification du module.
 
-- `security/ir.model.access.csv`
+## Notifications et suivi
 
-## Bonnes pratiques d?utilisation
+Les modules qui dependent de `mail` utilisent le chatter Odoo pour tracer les changements. Les templates mail presents dans le dossier `data` servent a notifier les acteurs concernes par les transitions.
 
-- V?rifier que chaque utilisateur Odoo est li? au bon employ? lorsque le module d?pend de `hr.employee`.
-- Tester le workflow avec un dossier de test avant utilisation en production.
-- Contr?ler les groupes de s?curit? apr?s installation afin que seuls les bons r?les voient les boutons de validation.
-- Garder les templates e-mail et rapports align?s avec les proc?dures internes.
-- Sauvegarder la base avant toute modification structurelle du module.
+## Installation
+
+1. Copier le module dans le dossier addons Odoo.
+2. Redemarrer le serveur Odoo si necessaire.
+3. Mettre a jour la liste des applications.
+4. Installer ou mettre a jour le module.
+5. Verifier les droits utilisateurs et tester un dossier de bout en bout.
 
 ## Maintenance
 
-- Les ?volutions fonctionnelles doivent ?tre ajout?es dans les mod?les Python, les vues XML et les r?gles de s?curit? correspondantes.
-- Apr?s modification des vues, mettre ? jour le module depuis Odoo ou red?marrer le serveur selon le type de changement.
-- Apr?s modification des assets, vider le cache navigateur et recompiler les assets si n?cessaire.
-- Toute nouvelle ?tape de workflow doit ?tre accompagn?e des droits, boutons, notifications et filtres correspondants.
+- Ajouter toute nouvelle etape a la fois dans le modele Python, les vues XML, les droits et les notifications.
+- Tester les workflows avec plusieurs roles utilisateurs.
+- Mettre a jour les rapports et templates mail quand la procedure interne change.
+- Eviter de modifier les donnees de production sans sauvegarde.
+- Documenter toute evolution fonctionnelle dans ce README.
