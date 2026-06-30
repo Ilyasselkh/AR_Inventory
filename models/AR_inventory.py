@@ -306,11 +306,10 @@ class ARinventory(models.Model):
 
     def get_lxo3_pivot_data(self):
         lxo3_model = self.env['araymond.lxo3']
-        session_model_name = 'araymond.maininvsession'
-        session_full_id = f"{session_model_name},{self.mainsession_id}"
+        main_session_id = self.rec_scan_id.mainsession_id.id
         # Example filtering; adjust as necessary for your specific use case
         lxo3_records = lxo3_model.search([
-            ('session_id', '=', session_full_id),  # Replace with your actual linking field
+            ('session_id', '=', main_session_id),
             ('type_magasin', '=', self.rec_scan_id.magasinPhysique),
             ('emplacement', '=', self.emplacement)
         ])
@@ -318,12 +317,14 @@ class ARinventory(models.Model):
         pivot_data_lx03 = {}
 
         for record in lxo3_records:
-            key = ( record.session_id, record.article, record.lot)
+            article = self._normalize_compare_text(record.article)
+            lot = self._normalize_compare_text(record.lot)
+            key = ( record.session_id, article, lot)
             if key not in pivot_data_lx03:
                 pivot_data_lx03[key] = {
                     'session_id' : record.session_id,
-                    'article': record.article,
-                    'lot': record.lot,
+                    'article': article,
+                    'lot': lot,
                     'stock_total': 0.0
                 }
             pivot_data_lx03[key]['stock_total'] += record.stock_total
@@ -332,11 +333,10 @@ class ARinventory(models.Model):
 
     def get_lxo3_su(self):
         lxo3_model = self.env['araymond.lxo3']
-        session_model_name = 'araymond.maininvsession'
-        session_full_id = f"{session_model_name},{self.mainsession_id}"
+        main_session_id = self.rec_scan_id.mainsession_id.id
         # Example filtering; adjust as necessary for your specific use case
         lxo3_records = lxo3_model.search([
-            ('session_id', '=', session_full_id),  # Replace with your actual linking field
+            ('session_id', '=', main_session_id),
             ('type_magasin', '=', self.rec_scan_id.magasinPhysique),
             ('emplacement', '=', self.emplacement)
         ])
@@ -352,25 +352,37 @@ class ARinventory(models.Model):
     def action_show_su_lxo3(self):
         raise exceptions.UserError(self.get_lxo3_su())
 
+    def _normalize_compare_text(self, value):
+        return str(value or '').strip()
+
+    def _qty_to_float(self, value):
+        qty_str = str(value or '').strip().replace(' ', '')
+        if ',' in qty_str and '.' in qty_str:
+            if qty_str.rfind(',') > qty_str.rfind('.'):
+                qty_str = qty_str.replace('.', '').replace(',', '.')
+            else:
+                qty_str = qty_str.replace(',', '')
+        else:
+            qty_str = qty_str.replace(',', '.')
+        cleaned_qty_str = re.sub(r'[^\d.-]', '', qty_str)
+        try:
+            return float(cleaned_qty_str) if cleaned_qty_str else 0.0
+        except ValueError:
+            return 0.0
+
     def get_scan_pivot_data(self,xx):
         pivot_data = {}
         etiquette_records = self.env['araymond.etiquette'].search([('su_id', '=', self.id), ('scanNbr', '=', xx)])  # Filter by ID
 
         for record in etiquette_records:
-            qty_str = record.qty
-            cleaned_qty_str = re.sub(r'[^\d.]', '', qty_str)
+            qty_value = self._qty_to_float(record.qty)
 
-            try:
-                qty_value = float(cleaned_qty_str) if cleaned_qty_str else 0.0
-            except ValueError:
-                qty_value = 0.0
-
-            key = (record.ref, record.lot)
+            key = (self._normalize_compare_text(record.ref), self._normalize_compare_text(record.lot))
 
             if key not in pivot_data:
                 pivot_data[key] = {
-                    'ref': record.ref,
-                    'lot': record.lot,
+                    'ref': key[0],
+                    'lot': key[1],
                     'qty': 0.0
                 }
             
