@@ -799,6 +799,7 @@ class ARinventory(models.Model):
         #        }}
             
         if self.scanraypro.upper()[0:1] in prefix_galia_raypro_qr or (len(self.scanraypro)== Nbr_Caractere_su and self.scanraypro[38:39]=="+") or len(self.scanraypro)== Nbr_Caractere_su-1: 
+            confirmed_barcode = self.scanraypro
             
             if len(self.scanraypro)== Nbr_Caractere_su-1 :
                 modeetiquette = "Manuel"
@@ -823,6 +824,8 @@ class ARinventory(models.Model):
             return {'warning': {
                 'title': 'l\'etiquette est bien scannée',
                 'message': ("l'etiquette est bien scannée"),
+                'type': 'ar_inventory_scan_success',
+                'barcode': confirmed_barcode,
             }}
             
 
@@ -838,6 +841,7 @@ class ARinventory(models.Model):
     @api.onchange('scanlog')
     def onchange_scanlog(self):
         self.scanlog = self.scanlog or ''
+        confirmed_barcode = self.scanlog
         #TODO : AJUSTER et ajouter la codnition nbr de caracteres 
         #TODO : hide OF 
         prefix_galia_log_manuel = 'MA'
@@ -982,12 +986,15 @@ class ARinventory(models.Model):
             return {'warning': {
                 'title': 'l\'etiquette est bien scannée',
                 'message': ("l'etiquette est bien scannée"),
+                'type': 'ar_inventory_scan_success',
+                'barcode': confirmed_barcode,
             }}
 
 
     @api.onchange('scanrecp')
     def onchange_scanrecp(self):
         self.scanrecp = self.scanrecp or ''
+        confirmed_barcode = self.scanrecp
         #TODO : AJUSTER et ajouter la codnition nbr de caracteres 
         #TODO : hide OF 
         prefix_galia_recp_manuel = 'Z'
@@ -1174,6 +1181,8 @@ class ARinventory(models.Model):
             return {'warning': {
                 'title': 'l\'etiquette est bien scannée',
                 'message': ("l'etiquette est bien scannée"),
+                'type': 'ar_inventory_scan_success',
+                'barcode': confirmed_barcode,
             }}
 
 
