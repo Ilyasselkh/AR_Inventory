@@ -50,17 +50,38 @@ class ScanConfirmationDialog extends Component {
 }
 
 patch(RelationalModel.prototype, {
-    _displayOnchangeWarning(warning) {
-        if (warning.type === "ar_inventory_scan_success" && warning.barcode) {
-            Promise.resolve(this.hooks.onWillDisplayOnchangeWarning(warning)).then(() => {
-                this.dialog.add(ScanConfirmationDialog, {
-                    barcode: warning.barcode,
-                    title: warning.title,
-                    message: warning.message,
-                });
-            });
-            return;
-        }
-        return super._displayOnchangeWarning(warning);
+    setup(...args) {
+        super.setup(...args);
+        // Odoo 19 displays onchange warnings directly in _onchange. Intercept
+        // only this model's successful scan response before the standard UI.
+        const wrapOrm = (orm) => new Proxy(orm, {
+            get: (target, property) => {
+                if (property === "cache") {
+                    return (...args) => wrapOrm(target.cache(...args));
+                }
+                if (property === "call") {
+                    return async (model, method, ...args) => {
+                        const response = await target.call(model, method, ...args);
+                        const warning = response?.warning;
+                        if (model === "araymond.inventory" && method === "onchange" &&
+                            warning?.type === "ar_inventory_scan_success" && warning.barcode) {
+                            const { warning: ignored, ...result } = response;
+                            Promise.resolve(this.hooks.onWillDisplayOnchangeWarning(warning)).then(() => {
+                                this.dialog.add(ScanConfirmationDialog, {
+                                    barcode: warning.barcode,
+                                    title: warning.title,
+                                    message: warning.message,
+                                });
+                            });
+                            return result;
+                        }
+                        return response;
+                    };
+                }
+                const value = Reflect.get(target, property);
+                return typeof value === "function" ? value.bind(target) : value;
+            },
+        });
+        this.orm = wrapOrm(this.orm);
     },
 });

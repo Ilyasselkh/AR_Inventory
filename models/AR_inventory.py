@@ -10,6 +10,18 @@ class ARinventory(models.Model):
     _name = 'araymond.inventory'
     _description = 'Araymond inventory'
 
+    def onchange(self, values, field_names, fields_spec):
+        result = super().onchange(values, field_names, fields_spec)
+        warning = result.get('warning', {})
+        if warning.get('type') == 'ar_inventory_scan_success':
+            # Odoo keeps only title/message/type from onchange warnings.
+            # Restore the original scan after that normalization.
+            warning['barcode'] = next((
+                values[name] for name in ('scanraypro', 'scanlog', 'scanrecp')
+                if name in field_names and values.get(name)
+            ), '')
+        return result
+
 
     scanraypro = fields.Char(string='Scannez', help="Scannez", default="")
     scanrecp = fields.Char(string='Scannez', help="Scannez", default="")
